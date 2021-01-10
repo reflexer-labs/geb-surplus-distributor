@@ -6,6 +6,7 @@ abstract contract SAFEEngineLike {
 }
 abstract contract SystemCoinLike {
     function balanceOf(address) virtual public view returns (uint256);
+    function approve(address, uint256) virtual public returns (uint256);
     function transfer(address,uint256) virtual public returns (bool);
 }
 abstract contract CoinJoinLike {
@@ -37,6 +38,8 @@ contract EqualSplitSurplusDistributor {
         safeEngine       = SAFEEngineLike(safeEngine_);
         coinJoin         = CoinJoinLike(coinJoin_);
         systemCoin       = SystemCoinLike(coinJoin.systemCoin());
+
+        systemCoin.approve(address(coinJoin), uint(-1));
     }
 
     // --- Boolean Logic ---
@@ -51,9 +54,6 @@ contract EqualSplitSurplusDistributor {
     function multiply(uint256 x, uint256 y) internal pure returns (uint256 z) {
         require(y == 0 || (z = x * y) / y == x, "EqualSplitSurplusDistributor/multiply-uint-uint-overflow");
     }
-    function maximum(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        z = (x >= y) ? x : y;
-    }
 
     // --- Utils ---
     function joinAllCoins() internal {
@@ -66,12 +66,13 @@ contract EqualSplitSurplusDistributor {
         uint256 totalSurplus        = safeEngine.coinBalance(address(this));
         uint256 splitSurplusPortion = totalSurplus / receiverAccounts.length;
 
-        if (both(totalSurplus > 0, multiply(splitSurplusPortion, receiverAccounts.length) <= totalSurplus)) {
+        if (both(totalSurplus > 0, splitSurplusPortion > 0)) {
           for (uint i = 0; i < receiverAccounts.length; i++) {
             if (i < subtract(receiverAccounts.length, 1)) {
               safeEngine.transferInternalCoins(address(this), receiverAccounts[i], splitSurplusPortion);
+              totalSurplus = subtract(totalSurplus, splitSurplusPortion);
             } else {
-              safeEngine.transferInternalCoins(address(this), receiverAccounts[i], maximum(totalSurplus % receiverAccounts.length, splitSurplusPortion));
+              safeEngine.transferInternalCoins(address(this), receiverAccounts[i], totalSurplus);
             }
           }
         }
