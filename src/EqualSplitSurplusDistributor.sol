@@ -16,10 +16,14 @@ abstract contract CoinJoinLike {
 
 contract EqualSplitSurplusDistributor {
     // --- Vars ---
+    // Addresses that will receive surplus
     address[]      public receiverAccounts;
 
+    // The SAFEEngine contract
     SAFEEngineLike public safeEngine;
+    // The system coin ERC20 contract
     SystemCoinLike public systemCoin;
+    // The CoinJoin contract
     CoinJoinLike   public coinJoin;
 
     constructor(
@@ -56,11 +60,17 @@ contract EqualSplitSurplusDistributor {
     }
 
     // --- Utils ---
+    /*
+    * @notify Internal util that joins all ERC20 coins this contract has inside the SAFEEngine
+    */
     function joinAllCoins() internal {
         if (systemCoin.balanceOf(address(this)) > 0) {
           coinJoin.join(address(this), systemCoin.balanceOf(address(this)));
         }
     }
+    /*
+    * @notify Equally split all system coins this contract has to all receiverAccounts
+    */
     function distributeSurplus() external {
         joinAllCoins();
         uint256 totalSurplus        = safeEngine.coinBalance(address(this));
