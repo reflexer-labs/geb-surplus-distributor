@@ -1,9 +1,9 @@
 pragma solidity 0.6.7;
 
 import "ds-test/test.sol";
-import "geb/SAFEEngine.sol";
-import "geb/Coin.sol";
-import {CoinJoin} from "geb/BasicTokenAdapters.sol";
+import "geb/single/SAFEEngine.sol";
+import "geb/shared/Coin.sol";
+import {CoinJoin} from "geb/shared/BasicTokenAdapters.sol";
 
 import "../EqualSplitSurplusDistributor.sol";
 
